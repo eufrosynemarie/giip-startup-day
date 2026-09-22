@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="referrer" content="no-referrer">
+<title>Roll call · GIIP Start-Up Day</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --petrol:      #05555E;
+    --lime:        #ECEF5E;
+    --turquoise:   #26E9D3;
+    --teal:        #08B4B8;
+    --mint-tint:   #DEFFEF;
+    --yellow-tint: #F1F2E0;
+
+    --ground:      #FBFDFC;
+    --surface:     #FFFFFF;
+    --ink:         #05555E;
+    --ink-soft:    #4C7A7E;
+    --ink-faint:   #7A9B9D;
+    --line:        #D8E7E6;
+    --line-strong: #B9D3D2;
+    --danger:      #A6402F;
+
+    --here-fill:   var(--mint-tint);
+    --here-edge:   var(--teal);
+    --miss-fill:   var(--yellow-tint);
+    --miss-edge:   var(--lime);
+
+    --radius: 12px;
+
+    color-scheme: light dark;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #04262A;
+      --surface:     #063B41;
+      --ink:         #E8F6F4;
+      --ink-soft:    #9DC4C4;
+      --ink-faint:   #7BA6A7;
+      --line:        #0B5158;
+      --line-strong: #12666D;
+      --danger:      #F0A091;
+
+      --here-fill:   #07504C;
+      --here-edge:   var(--turquoise);
+      --miss-fill:   #12454A;
+      --miss-edge:   var(--lime);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:      #04262A;
+    --surface:     #063B41;
+    --ink:         #E8F6F4;
+    --ink-soft:    #9DC4C4;
+    --ink-faint:   #7BA6A7;
+    --line:        #0B5158;
+    --line-strong: #12666D;
+    --danger:      #F0A091;
+
+    --here-fill:   #07504C;
+    --here-edge:   var(--turquoise);
+    --miss-fill:   #12454A;
+    --miss-edge:   var(--lime);
+  }
+
+  * { box-sizing: border-box; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: Inter, "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding-inline: 16px;
+    padding-block: 0 96px;
+  }
+
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 6px;
+  }
+
+  .hl {
+    font-family: Lora, Georgia, "Times New Roman", serif;
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -.01em;
+    margin: 0;
+    text-wrap: balance;
+    display: inline;
+    background-image: linear-gradient(var(--lime), var(--lime));
+    background-repeat: no-repeat;
+    background-size: 100% .32em;
+    background-position: 0 88%;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    padding-inline: 2px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .hl {
+      background-image: linear-gradient(rgba(236, 239, 94, .35), rgba(236, 239, 94, .35));
+    }
+  }
+  :root[data-theme="dark"] .hl {
+    background-image: linear-gradient(rgba(236, 239, 94, .35), rgba(236, 239, 94, .35));
+  }
+
+  /* ---------- Lock screen ---------- */
+  .gate { padding-block: 64px 40px; }
+  .gate h1 { font-size: clamp(26px, 7vw, 34px); }
+  .gate p.why {
+    margin: 18px 0 0;
+    color: var(--ink-soft);
+    font-size: 14px;
+    max-width: 46ch;
+  }
+  .gate form {
+    margin-top: 22px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    align-items: center;
+  }
+  .gate input {
+    flex: 1 1 190px;
+    min-width: 0;
+    font: inherit;
+    font-size: 16px;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    padding: 11px 13px;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .gate input:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+  .gate .err {
+    margin: 12px 0 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--danger);
+    min-height: 1.4em;
+  }
+
+  /* ---------- Masthead ---------- */
+  .masthead { padding-block: 28px 20px; }
+  .lede { margin: 14px 0 0; color: var(--ink-soft); font-size: 14px; max-width: 46ch; }
+
+  /* ---------- Sticky control deck ---------- */
+  .deck {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 20;
+    background: var(--ground);
+    padding-block: 10px 12px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 16px;
+  }
+
+  .tally { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .tile { border-radius: var(--radius); padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
+  .tile--here { background: var(--petrol); color: #fff; }
+  .tile--missing { background: var(--surface); border: 1px solid var(--line-strong); border-left: 5px solid var(--lime); }
+  .tile .num {
+    font-family: Lora, Georgia, serif;
+    font-size: 30px; font-weight: 600; line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .tile--here .num { color: var(--lime); }
+  .tile .lbl { font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+  .tile--here .lbl { color: rgba(255,255,255,.75); }
+  .tile--missing .lbl { color: var(--ink-faint); }
+
+  .meter { height: 6px; border-radius: 999px; background: var(--line); overflow: hidden; margin-bottom: 12px; }
+  .meter > span { display: block; height: 100%; width: 0%; background: var(--teal); border-radius: 999px; transition: width .25s ease; }
+
+  .searchrow { position: relative; margin-bottom: 10px; }
+  #search {
+    width: 100%;
+    font: inherit; font-size: 16px;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    padding: 11px 38px 11px 13px;
+    -webkit-appearance: none; appearance: none;
+  }
+  #search::placeholder { color: var(--ink-faint); }
+  #search:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+  .clear-search {
+    position: absolute; right: 5px; top: 50%; transform: translateY(-50%);
+    width: 30px; height: 30px; border: 0; background: none;
+    color: var(--ink-faint); font-size: 19px; line-height: 1; cursor: pointer; border-radius: 8px;
+  }
+  .clear-search:hover { color: var(--ink); }
+
+  .chips { display: flex; gap: 7px; flex-wrap: wrap; }
+  .chip {
+    font: inherit; font-size: 13px; font-weight: 500;
+    border: 1px solid var(--line-strong);
+    background: var(--surface); color: var(--ink-soft);
+    border-radius: 999px; padding: 6px 13px; cursor: pointer;
+  }
+  .chip .c { font-variant-numeric: tabular-nums; opacity: .65; margin-left: 4px; }
+  .chip[aria-pressed="true"] { background: var(--petrol); border-color: var(--petrol); color: #fff; font-weight: 600; }
+  .chip[aria-pressed="true"] .c { opacity: .8; }
+  .chip:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+
+  /* ---------- Roster ---------- */
+  ul.roster { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .row {
+    width: 100%;
+    display: flex; align-items: center; gap: 12px;
+    text-align: left; font: inherit; color: var(--ink);
+    background: var(--miss-fill);
+    border: 1px solid var(--line);
+    border-left: 5px solid var(--miss-edge);
+    border-radius: 10px;
+    padding: 11px 13px;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease;
+  }
+  .row:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+  .row[aria-pressed="true"] { background: var(--here-fill); border-color: var(--line); border-left-color: var(--here-edge); }
+
+  .tick {
+    flex: none; width: 24px; height: 24px; border-radius: 50%;
+    border: 2px solid var(--line-strong); background: var(--surface);
+    display: grid; place-items: center;
+  }
+  .tick svg { width: 13px; height: 13px; display: none; }
+  .row[aria-pressed="true"] .tick { background: var(--here-edge); border-color: var(--here-edge); }
+  .row[aria-pressed="true"] .tick svg { display: block; }
+
+  .who { flex: 1 1 auto; min-width: 0; }
+  .name { font-weight: 600; font-size: 15px; display: block; overflow-wrap: anywhere; }
+  .row[aria-pressed="true"] .name { font-weight: 500; }
+  .uni { display: block; font-size: 12px; color: var(--ink-faint); overflow-wrap: anywhere; }
+
+  .stamp { flex: none; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink-soft); }
+  .await { flex: none; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
+
+  .empty {
+    text-align: center; color: var(--ink-faint); font-size: 14px;
+    padding: 34px 10px; border: 1px dashed var(--line-strong); border-radius: var(--radius);
+  }
+
+  /* ---------- Footer actions ---------- */
+  .actions {
+    margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line);
+    display: flex; flex-wrap: wrap; gap: 9px; align-items: center;
+  }
+  .btn {
+    font: inherit; font-size: 13px; font-weight: 600;
+    border-radius: 9px; padding: 9px 15px; cursor: pointer;
+    border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+  }
+  .btn--primary { background: var(--petrol); border-color: var(--petrol); color: #fff; }
+  .btn:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+  .saved { font-size: 12px; color: var(--ink-faint); margin-left: auto; }
+
+  .spill {
+    margin-top: 12px; width: 100%; min-height: 130px;
+    font: inherit; font-size: 13px; color: var(--ink);
+    background: var(--surface); border: 1px solid var(--line-strong);
+    border-radius: 10px; padding: 11px; resize: vertical;
+  }
+
+  .note { margin-top: 26px; font-size: 12px; line-height: 1.6; color: var(--ink-faint); }
+  .note a { color: var(--teal); }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ===== Lock screen ===== -->
+  <section class="gate" id="gate">
+    <p class="eyebrow">GAIN Sweden · GIIP 2026</p>
+    <h1 class="hl">Start-Up Day roll call</h1>
+    <p class="why">The student list is encrypted, because this site is public. Enter the team code to open the roll call.</p>
+    <form id="gate-form">
+      <label for="code" class="sr-only" hidden>Team code</label>
+      <input id="code" name="code" type="password" inputmode="text" autocomplete="current-password"
+             placeholder="Team code" aria-describedby="gate-err" required>
+      <button class="btn btn--primary" type="submit" id="unlock">Open the roll call</button>
+    </form>
+    <p class="err" id="gate-err" role="status" aria-live="polite"></p>
+  </section>
+
+  <!-- ===== Roll call ===== -->
+  <div id="app" hidden>
+    <header class="masthead">
+      <p class="eyebrow">GAIN Sweden · GIIP 2026</p>
+      <h1 class="hl">Start-Up Day roll call</h1>
+      <p class="lede">Tap a name to check her in. Anyone still on a lime bar has not arrived yet.</p>
+    </header>
+
+    <div class="deck">
+      <div class="tally">
+        <div class="tile tile--here">
+          <span class="num" id="n-here">0</span>
+          <span class="lbl">Checked in</span>
+        </div>
+        <div class="tile tile--missing">
+          <span class="num" id="n-missing">0</span>
+          <span class="lbl">Still missing</span>
+        </div>
+      </div>
+
+      <div class="meter" role="progressbar" aria-label="Share of the group checked in" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="meter">
+        <span id="meter-fill"></span>
+      </div>
+
+      <div class="searchrow">
+        <input id="search" type="search" placeholder="Search a name or university" autocomplete="off" aria-label="Search the roll call">
+        <button class="clear-search" id="clear-search" type="button" aria-label="Clear search" hidden>&times;</button>
+      </div>
+
+      <div class="chips" role="group" aria-label="Filter the list">
+        <button class="chip" type="button" data-filter="all"     aria-pressed="true">Everyone <span class="c" id="c-all">0</span></button>
+        <button class="chip" type="button" data-filter="missing" aria-pressed="false">Missing <span class="c" id="c-missing">0</span></button>
+        <button class="chip" type="button" data-filter="here"    aria-pressed="false">Here <span class="c" id="c-here">0</span></button>
+      </div>
+    </div>
+
+    <ul class="roster" id="roster"></ul>
+    <p class="empty" id="empty" hidden>No one matches that.</p>
+
+    <div class="actions">
+      <button class="btn btn--primary" type="button" id="copy-missing">Copy the missing list</button>
+      <button class="btn" type="button" id="reset">Start over</button>
+      <button class="btn" type="button" id="lock">Lock</button>
+      <span class="saved" id="saved"></span>
+    </div>
+    <textarea class="spill" id="spill" hidden readonly aria-label="Missing list, ready to copy"></textarea>
+
+    <p class="note">Your ticks are saved in this browser on this device, so you can close the page and come back mid-morning. They are not shared with anyone else, and opening the page on another phone starts a fresh list. Tap Lock to clear the saved code from this device.</p>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* The student list never ships in the clear: it is AES-GCM ciphertext,
+     unlocked with a key derived from the team code via PBKDF2. */
+  var VAULT = {
+    iterations: 250000,
+    salt: "1b9JgiItv7RgMTvR05k0mg==",
+    iv: "0t2whVp7XNMgJKYF",
+    data: "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"
+  };
+
+  var STORE_KEY = "giip-startup-day-rollcall-v1";
+  var CODE_KEY  = "giip-startup-day-rollcall-code";
+
+  var gate = document.getElementById("gate");
+  var gateForm = document.getElementById("gate-form");
+  var codeInput = document.getElementById("code");
+  var gateErr = document.getElementById("gate-err");
+  var app = document.getElementById("app");
+
+  /* ---------- unlocking ---------- */
+
+  function b64(s) {
+    var bin = atob(s);
+    var out = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+
+  function decrypt(code) {
+    var subtle = window.crypto && window.crypto.subtle;
+    if (!subtle) {
+      return Promise.reject(new Error("insecure-context"));
+    }
+    var enc = new TextEncoder();
+    return subtle.importKey("raw", enc.encode(code), "PBKDF2", false, ["deriveKey"])
+      .then(function (base) {
+        return subtle.deriveKey(
+          { name: "PBKDF2", salt: b64(VAULT.salt), iterations: VAULT.iterations, hash: "SHA-256" },
+          base,
+          { name: "AES-GCM", length: 256 },
+          false,
+          ["decrypt"]
+        );
+      })
+      .then(function (key) {
+        return subtle.decrypt({ name: "AES-GCM", iv: b64(VAULT.iv) }, key, b64(VAULT.data));
+      })
+      .then(function (buf) {
+        return JSON.parse(new TextDecoder().decode(buf));
+      });
+  }
+
+  gateForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var code = codeInput.value.trim();
+    if (!code) return;
+    attempt(code, true);
+  });
+
+  function attempt(code, loud) {
+    var btn = document.getElementById("unlock");
+    if (loud) { btn.disabled = true; gateErr.textContent = "Unlocking…"; }
+    decrypt(code).then(function (roster) {
+      try { localStorage.setItem(CODE_KEY, code); } catch (e) {}
+      gate.hidden = true;
+      app.hidden = false;
+      start(roster);
+    }, function (err) {
+      if (loud) {
+        btn.disabled = false;
+        gateErr.textContent = (err && err.message === "insecure-context")
+          ? "This page needs a secure https address to unlock."
+          : "That code did not work. Check it and try again.";
+        codeInput.select();
+      }
+    });
+  }
+
+  // Auto-unlock if this device has already been let in.
+  (function () {
+    var saved = null;
+    try { saved = localStorage.getItem(CODE_KEY); } catch (e) {}
+    if (saved) attempt(saved, false);
+  })();
+
+  /* ---------- the roll call ---------- */
+
+  function start(ROSTER) {
+    var people = ROSTER.map(function (r, i) {
+      return {
+        id: String(i),
+        first: r[0], last: r[1], uni: r[2],
+        name: r[0] + " " + r[1],
+        hay: fold(r[0] + " " + r[1] + " " + r[2])
+      };
+    }).sort(function (a, b) { return a.name.localeCompare(b.name, "sv"); });
+
+    var checked = load();
+    var filter = "all";
+    var query = "";
+
+    function load() {
+      try {
+        var raw = localStorage.getItem(STORE_KEY);
+        if (!raw) return {};
+        var parsed = JSON.parse(raw);
+        return (parsed && typeof parsed === "object") ? parsed : {};
+      } catch (e) { return {}; }
+    }
+
+    function save() {
+      try {
+        localStorage.setItem(STORE_KEY, JSON.stringify(checked));
+        flash("Saved " + clock(new Date()));
+      } catch (e) {
+        flash("Could not save to this browser");
+      }
+    }
+
+    var flashTimer = null;
+    function flash(msg) {
+      var el = document.getElementById("saved");
+      el.textContent = msg;
+      if (flashTimer) clearTimeout(flashTimer);
+      flashTimer = setTimeout(function () { el.textContent = ""; }, 2600);
+    }
+
+    var TICK = '<span class="tick"><svg viewBox="0 0 16 16" aria-hidden="true">' +
+               '<path d="M2.5 8.5 L6.2 12 L13.5 4" fill="none" stroke="#05555E" ' +
+               'stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
+
+    var roster = document.getElementById("roster");
+    roster.textContent = "";
+
+    var rows = people.map(function (p) {
+      var li = document.createElement("li");
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "row";
+      btn.dataset.id = p.id;
+      btn.innerHTML = TICK +
+        '<span class="who"><span class="name"></span><span class="uni"></span></span>' +
+        '<span class="stamp"></span>';
+      btn.querySelector(".name").textContent = p.name;
+      btn.querySelector(".uni").textContent = p.uni;
+      li.appendChild(btn);
+      roster.appendChild(li);
+      return { person: p, li: li, btn: btn, stamp: btn.querySelector(".stamp") };
+    });
+
+    function isHere(id) { return Object.prototype.hasOwnProperty.call(checked, id); }
+
+    function paint() {
+      var here = 0, shown = 0;
+
+      rows.forEach(function (r) {
+        var on = isHere(r.person.id);
+        if (on) here++;
+
+        r.btn.setAttribute("aria-pressed", on ? "true" : "false");
+        r.btn.setAttribute("aria-label",
+          r.person.name + ", " + r.person.uni + ". " +
+          (on ? "Checked in. Tap to undo." : "Not here yet. Tap to check in."));
+
+        if (on) {
+          var t = new Date(checked[r.person.id]);
+          r.stamp.textContent = isNaN(t.getTime()) ? "" : clock(t);
+          r.stamp.className = "stamp";
+        } else {
+          r.stamp.textContent = "Not here";
+          r.stamp.className = "await";
+        }
+
+        var passesFilter = filter === "all" || (filter === "here" ? on : !on);
+        var passesQuery = !query || r.person.hay.indexOf(query) !== -1;
+        var visible = passesFilter && passesQuery;
+        r.li.hidden = !visible;
+        if (visible) shown++;
+      });
+
+      var total = rows.length;
+      var missing = total - here;
+
+      document.getElementById("n-here").textContent = here;
+      document.getElementById("n-missing").textContent = missing;
+      document.getElementById("c-all").textContent = total;
+      document.getElementById("c-here").textContent = here;
+      document.getElementById("c-missing").textContent = missing;
+
+      var pct = total ? Math.round((here / total) * 100) : 0;
+      document.getElementById("meter-fill").style.width = pct + "%";
+      document.getElementById("meter").setAttribute("aria-valuenow", String(pct));
+
+      var empty = document.getElementById("empty");
+      empty.hidden = shown > 0;
+      empty.textContent = query
+        ? "No one matches “" + query + "”."
+        : (filter === "missing" ? "Everyone is here." : "No one is checked in yet.");
+
+      document.getElementById("clear-search").hidden = !query;
+    }
+
+    roster.addEventListener("click", function (e) {
+      var btn = e.target.closest(".row");
+      if (!btn) return;
+      var id = btn.dataset.id;
+      if (isHere(id)) { delete checked[id]; }
+      else { checked[id] = new Date().toISOString(); }
+      document.getElementById("spill").hidden = true;
+      paint();
+      save();
+    });
+
+    document.querySelectorAll(".chip").forEach(function (chip) {
+      chip.addEventListener("click", function () {
+        filter = chip.dataset.filter;
+        document.querySelectorAll(".chip").forEach(function (c) {
+          c.setAttribute("aria-pressed", c === chip ? "true" : "false");
+        });
+        paint();
+      });
+    });
+
+    var search = document.getElementById("search");
+    search.addEventListener("input", function () {
+      query = fold(search.value.trim());
+      paint();
+    });
+    document.getElementById("clear-search").addEventListener("click", function () {
+      search.value = "";
+      query = "";
+      paint();
+      search.focus();
+    });
+
+    document.getElementById("copy-missing").addEventListener("click", function () {
+      var missing = people.filter(function (p) { return !isHere(p.id); });
+      var text = missing.length
+        ? "Missing from GIIP Start-Up Day (" + missing.length + " of " + people.length + ") as of " + clock(new Date()) + ":\n\n" +
+          missing.map(function (p) { return "- " + p.name + " (" + p.uni + ")"; }).join("\n")
+        : "Everyone on the list is checked in.";
+
+      var spill = document.getElementById("spill");
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () {
+          spill.hidden = true;
+          flash("Missing list copied");
+        }, function () { showSpill(spill, text); });
+      } else {
+        showSpill(spill, text);
+      }
+    });
+
+    function showSpill(spill, text) {
+      spill.value = text;
+      spill.hidden = false;
+      spill.focus();
+      spill.select();
+      flash("Copy it from the box below");
+    }
+
+    document.getElementById("reset").addEventListener("click", function () {
+      var here = people.filter(function (p) { return isHere(p.id); }).length;
+      if (here && !window.confirm("Clear all " + here + " check-ins and start the roll call over?")) return;
+      checked = {};
+      document.getElementById("spill").hidden = true;
+      paint();
+      save();
+    });
+
+    document.getElementById("lock").addEventListener("click", function () {
+      if (!window.confirm("Lock the roll call on this device? Your check-ins are kept, but you will need the team code again.")) return;
+      try { localStorage.removeItem(CODE_KEY); } catch (e) {}
+      location.reload();
+    });
+
+    paint();
+  }
+
+  /* ---------- shared helpers ---------- */
+
+  // Strip diacritics so an unaccented search still matches "ä", "ö" and "é".
+  function fold(s) {
+    var t = s.toLowerCase();
+    try { t = t.normalize("NFD").replace(/[̀-ͯ]/g, ""); } catch (e) {}
+    return t;
+  }
+
+  function clock(d) {
+    var h = String(d.getHours()).padStart(2, "0");
+    var m = String(d.getMinutes()).padStart(2, "0");
+    return h + ":" + m;
+  }
+})();
+</script>
+</body>
+</html>
