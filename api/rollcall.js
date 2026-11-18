@@ -5,7 +5,8 @@
 // Writes use the blob's ETag (ifMatch) so two staff ticking girls at the
 // same moment never overwrite each other; a conflict just retries.
 //
-// Every request must carry the staff code (ROLLCALL_CODE) in x-staff-code.
+// No login: staff tap their name in the tab. The names are already public
+// on the page, so the only thing stored here is who is present.
 
 import { get, put, BlobPreconditionFailedError } from '@vercel/blob';
 
@@ -21,12 +22,6 @@ function json(body, status = 200) {
     status,
     headers: { 'content-type': 'application/json', 'cache-control': 'no-store' },
   });
-}
-
-function authorised(request) {
-  const code = process.env.ROLLCALL_CODE;
-  const given = (request.headers.get('x-staff-code') || '').trim().toLowerCase();
-  return Boolean(code) && given === code.trim().toLowerCase();
 }
 
 function storageReady() {
@@ -55,8 +50,7 @@ async function writeState(state, etag) {
   await put(PATH, JSON.stringify(state), opts);
 }
 
-export async function GET(request) {
-  if (!authorised(request)) return json({ error: 'wrong-code' }, 401);
+export async function GET() {
   if (!storageReady()) return json({ error: 'no-storage' }, 503);
   try {
     const { state } = await readState();
@@ -68,7 +62,6 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-  if (!authorised(request)) return json({ error: 'wrong-code' }, 401);
   if (!storageReady()) return json({ error: 'no-storage' }, 503);
 
   let body;
