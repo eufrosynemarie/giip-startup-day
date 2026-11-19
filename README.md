@@ -8,10 +8,15 @@ Live at https://giip-gain-swe.vercel.app/
 ## Roll call tab
 
 The **Roll call** tab (direct link: `/#rollcall`) lets the GAIN team tick off
-each girl as she arrives at each firm visit. It talks to one serverless
-function, [`api/rollcall.js`](api/rollcall.js), which keeps every check-in in
-a private Vercel Blob (`rollcall/state.json`). Everyone polling the tab sees
-the same list within a few seconds.
+each girl as she arrives at each firm visit. Taps are kept on the phone until
+you press **Save roll call**; the button says *All saved ✓* only once the
+server has sent every tap back. It talks to one serverless function,
+[`api/rollcall.js`](api/rollcall.js), which keeps each staff member's taps in
+their own private Vercel Blob (`rollcall/staff/<name>.json`), so two phones
+saving at once can't overwrite each other. The newest tap for each girl wins.
+The old shared file (`rollcall/state.json`) is still read for check-ins saved
+before this change. Everyone polling the tab sees the same list within a few
+seconds.
 
 There is no login: each person taps their name once and the phone remembers
 it. Storage comes from the `giip-rollcall` Blob store connected to the

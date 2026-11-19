@@ -1,21 +1,36 @@
 // Roll call for the GIIP Insight day firm visits.
 //
-// One private JSON blob holds every check-in:
-//   { checks: { "<visitId>": { "<participant>": { by, at } } } }
-// Writes use the blob's ETag (ifMatch) so two staff ticking girls at the
-// same moment never overwrite each other; a conflict just retries.
+// Each staff member has their own private JSON blob:
+//   rollcall/staff/<slug>.json = { records: { "<visit>|<person>": { visit, person, present, at } } }
+// A record is one tap: "this girl is here" (present: true) or "not here"
+// (present: false), with the time of the tap. For each girl at each visit the
+// newest record across all staff wins.
+//
+// Why one blob per person: the first version kept everyone's taps in one
+// shared file, so two phones saving at the same moment could overwrite each
+// other and check-ins went missing. Now a phone only ever writes its own
+// staff member's file, and it always sends every tap it has made, so a save
+// that is retried or repeated can only add what is missing, never lose it.
+//
+// The old shared file (rollcall/state.json) is still read, so the check-ins
+// saved with the first version keep showing.
 //
 // No login: staff tap their name in the tab. The names are already public
 // on the page, so the only thing stored here is who is present.
 
 import { get, put, BlobPreconditionFailedError } from '@vercel/blob';
 
-const PATH = 'rollcall/state.json';
+const LEGACY_PATH = 'rollcall/state.json';
 const VISITS = new Set([
   'am-priveq', 'am-urban-partners', 'am-monterro',
   'pm-novax', 'pm-axcel', 'pm-fsn-capital', 'pm-altor',
 ]);
-const STAFF = new Set(['Emily Quan', 'Salma Axelsson Luedtke', 'Emmy Sendow', 'Karin Nordin']);
+const STAFF = ['Emily Quan', 'Salma Axelsson Luedtke', 'Emmy Sendow', 'Karin Nordin'];
+const TEAM = 'GAIN team';
+const MAX_RECORDS = 500;
+
+function slug(s) { return String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
+function staffPath(name) { return 'rollcall/staff/' + slug(name) + '.json'; }
 
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -28,33 +43,69 @@ function storageReady() {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
 }
 
-async function readState() {
-  const res = await get(PATH, { access: 'private', useCache: false });
-  if (!res || res.statusCode !== 200 || !res.stream) return { state: { checks: {} }, etag: null };
+async function readJson(path) {
+  const res = await get(path, { access: 'private', useCache: false });
+  if (!res || res.statusCode !== 200 || !res.stream) return { data: null, etag: null };
   const text = await new Response(res.stream).text();
-  let state;
-  try { state = JSON.parse(text); } catch { state = { checks: {} }; }
-  if (!state || typeof state.checks !== 'object') state = { checks: {} };
-  return { state, etag: res.blob.etag };
+  let data = null;
+  try { data = JSON.parse(text); } catch { data = null; }
+  return { data, etag: res.blob.etag };
 }
 
-async function writeState(state, etag) {
-  const opts = {
-    access: 'private',
-    contentType: 'application/json',
-    addRandomSuffix: false,
-    cacheControlMaxAge: 60,
-  };
-  if (etag) { opts.allowOverwrite = true; opts.ifMatch = etag; }
-  else { opts.allowOverwrite = false; } // first write: fail if someone beat us to it
-  await put(PATH, JSON.stringify(state), opts);
+function cleanRecord(r) {
+  if (!r || typeof r !== 'object') return null;
+  const { visit, person, present, at } = r;
+  if (!VISITS.has(visit)) return null;
+  if (typeof person !== 'string' || !person || person.length > 120) return null;
+  if (typeof present !== 'boolean') return null;
+  const t = Date.parse(at);
+  if (!Number.isFinite(t)) return null;
+  return { visit, person, present, at: new Date(t).toISOString() };
+}
+
+function newer(a, b) { return !b || Date.parse(a.at) > Date.parse(b.at); }
+
+// Every staff file plus the old shared file, merged: newest tap wins.
+// `own` replaces one staff member's file with what was just written, so a
+// read that lags behind the write cannot hide a fresh save.
+async function readAll(own) {
+  const names = [...STAFF, TEAM];
+  const [legacy, ...files] = await Promise.all([
+    readJson(LEGACY_PATH).catch(() => ({ data: null })),
+    ...names.map((n) => readJson(staffPath(n))),
+  ]);
+
+  const best = {};
+  const legacyChecks = legacy.data && typeof legacy.data.checks === 'object' ? legacy.data.checks : {};
+  for (const visit of Object.keys(legacyChecks)) {
+    for (const [person, c] of Object.entries(legacyChecks[visit] || {})) {
+      const r = cleanRecord({ visit, person, present: true, at: c && c.at });
+      if (r) best[visit + '|' + person] = { ...r, by: (c && c.by) || TEAM };
+    }
+  }
+  names.forEach((name, i) => {
+    const recs = own && own.name === name ? own.records : ((files[i].data && files[i].data.records) || {});
+    for (const raw of Object.values(recs)) {
+      const r = cleanRecord(raw);
+      if (!r) continue;
+      const key = r.visit + '|' + r.person;
+      if (newer(r, best[key])) best[key] = { ...r, by: name };
+    }
+  });
+
+  const checks = {};
+  for (const r of Object.values(best)) {
+    if (!r.present) continue;
+    (checks[r.visit] || (checks[r.visit] = {}))[r.person] = { by: r.by, at: r.at };
+  }
+  return { checks };
 }
 
 export async function GET() {
   if (!storageReady()) return json({ error: 'no-storage' }, 503);
   try {
-    const { state } = await readState();
-    return json({ checks: state.checks, now: new Date().toISOString() });
+    const { checks } = await readAll();
+    return json({ checks, now: new Date().toISOString() });
   } catch (err) {
     console.error('rollcall GET failed', err);
     return json({ error: 'read-failed' }, 500);
@@ -66,23 +117,38 @@ export async function POST(request) {
 
   let body;
   try { body = await request.json(); } catch { return json({ error: 'bad-json' }, 400); }
-  const { visit, person, present, by } = body || {};
-  if (!VISITS.has(visit)) return json({ error: 'bad-visit' }, 400);
-  if (typeof person !== 'string' || !person || person.length > 120) return json({ error: 'bad-person' }, 400);
-  if (typeof present !== 'boolean') return json({ error: 'bad-present' }, 400);
-  const who = STAFF.has(by) ? by : 'GAIN team';
+  body = body || {};
+  const who = STAFF.includes(body.by) ? body.by : TEAM;
 
+  // New pages send { by, records: [...] }. Pages still open from before send
+  // a single tap { visit, person, present, by }.
+  let incoming;
+  if (Array.isArray(body.records)) {
+    if (body.records.length > MAX_RECORDS) return json({ error: 'too-many' }, 400);
+    incoming = body.records.map(cleanRecord);
+    if (incoming.some((r) => !r)) return json({ error: 'bad-record' }, 400);
+  } else {
+    const r = cleanRecord({ ...body, at: new Date().toISOString() });
+    if (!r) return json({ error: 'bad-record' }, 400);
+    incoming = [r];
+  }
+
+  const path = staffPath(who);
   for (let attempt = 0; attempt < 6; attempt++) {
     try {
-      const { state, etag } = await readState();
-      const visitChecks = state.checks[visit] || (state.checks[visit] = {});
-      if (present) {
-        if (!visitChecks[person]) visitChecks[person] = { by: who, at: new Date().toISOString() };
-      } else {
-        delete visitChecks[person];
+      const { data, etag } = await readJson(path);
+      const records = { ...((data && data.records) || {}) };
+      for (const r of incoming) {
+        const key = r.visit + '|' + r.person;
+        if (newer(r, records[key])) records[key] = r;
       }
-      await writeState(state, etag);
-      return json({ checks: state.checks, now: new Date().toISOString() });
+      if (Object.keys(records).length > MAX_RECORDS) return json({ error: 'too-many' }, 400);
+      const opts = { access: 'private', contentType: 'application/json', addRandomSuffix: false, cacheControlMaxAge: 60 };
+      if (etag) { opts.allowOverwrite = true; opts.ifMatch = etag; } else { opts.allowOverwrite = false; }
+      await put(path, JSON.stringify({ records }), opts);
+
+      const { checks } = await readAll({ name: who, records });
+      return json({ checks, saved: Object.values(records), by: who, now: new Date().toISOString() });
     } catch (err) {
       const conflict = err instanceof BlobPreconditionFailedError ||
         /already exists|precondition/i.test(String(err && err.message));
