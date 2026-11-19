@@ -11,6 +11,7 @@
 // other and check-ins went missing. Now a phone only ever writes its own
 // staff member's file, and it always sends every tap it has made, so a save
 // that is retried or repeated can only add what is missing, never lose it.
+// No ETag checks: in production they rejected every write as a conflict.
 //
 // The old shared file (rollcall/state.json) is still read, so the check-ins
 // saved with the first version keep showing.
@@ -18,7 +19,7 @@
 // No login: staff tap their name in the tab. The names are already public
 // on the page, so the only thing stored here is who is present.
 
-import { get, put, BlobPreconditionFailedError } from '@vercel/blob';
+import { get, put } from '@vercel/blob';
 
 const LEGACY_PATH = 'rollcall/state.json';
 const VISITS = new Set([
@@ -133,31 +134,26 @@ export async function POST(request) {
     incoming = [r];
   }
 
+  // Only this staff member's phone writes this file, and it always sends
+  // every tap it has, so a plain overwrite is safe. The read is only there to
+  // keep taps made earlier on another phone under the same name.
   const path = staffPath(who);
-  for (let attempt = 0; attempt < 6; attempt++) {
-    try {
-      const { data, etag } = await readJson(path);
-      const records = { ...((data && data.records) || {}) };
-      for (const r of incoming) {
-        const key = r.visit + '|' + r.person;
-        if (newer(r, records[key])) records[key] = r;
-      }
-      if (Object.keys(records).length > MAX_RECORDS) return json({ error: 'too-many' }, 400);
-      const opts = { access: 'private', contentType: 'application/json', addRandomSuffix: false, cacheControlMaxAge: 60 };
-      if (etag) { opts.allowOverwrite = true; opts.ifMatch = etag; } else { opts.allowOverwrite = false; }
-      await put(path, JSON.stringify({ records }), opts);
-
-      const { checks } = await readAll({ name: who, records });
-      return json({ checks, saved: Object.values(records), by: who, now: new Date().toISOString() });
-    } catch (err) {
-      const conflict = err instanceof BlobPreconditionFailedError ||
-        /already exists|precondition/i.test(String(err && err.message));
-      if (!conflict) {
-        console.error('rollcall POST failed', err);
-        return json({ error: 'write-failed' }, 500);
-      }
-      await new Promise((r) => setTimeout(r, 80 + Math.random() * 200));
+  try {
+    const { data } = await readJson(path).catch(() => ({ data: null }));
+    const records = { ...((data && data.records) || {}) };
+    for (const r of incoming) {
+      const key = r.visit + '|' + r.person;
+      if (newer(r, records[key])) records[key] = r;
     }
+    if (Object.keys(records).length > MAX_RECORDS) return json({ error: 'too-many' }, 400);
+    await put(path, JSON.stringify({ records }), {
+      access: 'private', contentType: 'application/json',
+      addRandomSuffix: false, allowOverwrite: true, cacheControlMaxAge: 60,
+    });
+    const { checks } = await readAll({ name: who, records });
+    return json({ checks, saved: Object.values(records), by: who, now: new Date().toISOString() });
+  } catch (err) {
+    console.error('rollcall POST failed', err);
+    return json({ error: 'write-failed', detail: String(err && err.message || err).slice(0, 200) }, 500);
   }
-  return json({ error: 'busy' }, 409);
 }
